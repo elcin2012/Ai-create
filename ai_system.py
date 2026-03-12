@@ -251,6 +251,36 @@ class PredictRequest(BaseModel):
     text: str
 
 
+def build_assistant_reply(text: str, intent: str, confidence: float) -> str:
+    """Создаёт понятный и честный ответ ассистента на основе intent."""
+    normalized_text = normalize_text(text)
+
+    if confidence < 0.45:
+        return (
+            "Я не совсем уверен, что правильно понял запрос. "
+            "Уточните, пожалуйста, что именно вам нужно: статус заказа, возврат или другой вопрос."
+        )
+
+    if intent == "greeting":
+        return "Здравствуйте! Готов помочь. Коротко опишите задачу, и я предложу понятное решение."
+
+    if intent == "order_status":
+        if "трек" in normalized_text or "номер" in normalized_text:
+            return "Проверю статус доставки. Отправьте трек-номер, и я подскажу следующий шаг."
+        return "Помогу со статусом заказа. Напишите номер заказа или трек-номер."
+
+    if intent == "refund":
+        return (
+            "Помогу оформить возврат. Обычно нужны номер заказа, причина возврата и фото товара "
+            "(если есть дефект)."
+        )
+
+    if intent == "goodbye":
+        return "Спасибо за обращение! Если появятся вопросы, я рядом."
+
+    return "Готов помочь. Опишите запрос чуть подробнее, чтобы я дал точный ответ."
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -259,7 +289,9 @@ def health():
 @app.post("/predict")
 def predict_endpoint(req: PredictRequest):
     model, vocab, id2label, cfg = load_model()
-    return predict(model, vocab, id2label, cfg, req.text)
+    result = predict(model, vocab, id2label, cfg, req.text)
+    result["reply"] = build_assistant_reply(req.text, result["intent"], result["confidence"])
+    return result
 
 
 def main():
