@@ -68,6 +68,7 @@ pip install torch fastapi uvicorn numpy
 - обучение;
 - сохранение/загрузка;
 - API-сервер FastAPI.
+- генерация честного и полезного текстового ответа `reply` на основе intent и уверенности модели.
 
 ### Быстрый запуск
 
@@ -89,6 +90,16 @@ python ai_system.py serve
 curl -X POST http://127.0.0.1:8000/predict \
   -H "Content-Type: application/json" \
   -d '{"text":"Где мой заказ?"}'
+```
+
+Пример ответа:
+
+```json
+{
+  "intent": "order_status",
+  "confidence": 0.91,
+  "reply": "Помогу со статусом заказа. Напишите номер заказа или трек-номер."
+}
 ```
 
 ---
